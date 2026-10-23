@@ -389,7 +389,7 @@ export class Monitor {
       );
     } catch (err) {
       if (strict) {
-        throw new Error(`cannot read the houses of Gladys: ${err.message}`);
+        throw new Error(`cannot read the houses of Gladys: ${err.message}`, { cause: err });
       }
       this.failed('houses', 'warn', `Cannot read the houses of Gladys: ${err.message}`);
       return null;
