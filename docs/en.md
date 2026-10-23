@@ -33,7 +33,7 @@ Bundes (WSV). No account, no key.
 - Internet access from Gladys: the integration reads `www.pegelonline.wsv.de`.
 - For "around my house": the location of your house in Gladys (Settings, Houses). The
   integration asks for it at installation (the "location" permission). It is only used inside
-  the container to find the nearest gauges: never sent to PEGELONLINE, never stored nor logged.
+  the container to find the nearest gauges: never sent to PEGELONLINE (which only sees which nearby gauges are asked for), never stored nor logged.
 - Germany only: PEGELONLINE covers the federal waterways, not the smaller rivers of the Länder.
 
 ## Configuration
@@ -105,8 +105,7 @@ Add the **PEGELONLINE** widget to a dashboard.
 
 The marks offered: NNW (lowest known), MNW (mean low), MW (mean), MHW (mean high), high water
 marks I and II (Rhine: navigation restricted, then stopped) and HHW (highest known). A gauge
-only fires the marks it has. A level must go 2 cm back below a mark before a new rise counts:
-a level wobbling around a mark fires once. The states come from PEGELONLINE itself.
+only fires the marks it has. The fall counts once the level is 2 cm below the mark, and only then can a new rise count: a level wobbling around a mark fires once. The states come from PEGELONLINE itself.
 
 Triggers only fire for a device you created, on a fresh reading, and not after a restart longer
 than a day.
@@ -117,8 +116,7 @@ than a day.
   I", rising → send a message: "{{station_name}}: {{height}} {{unit}}, above {{mark_name}}".
 - **Cellar watch**: "Water level state changes", your gauge, new state High → switch on the
   pump socket and notify the family.
-- **Boat trip**: "Above the highest navigable level", station Kaub → message "No navigation on
-  the {{river}}"; "Back below the highest navigable level" → "Navigation open again".
+- **Boat trip**: "Above the highest navigable level", station Kaub → message "No navigation: {{river}}"; "Back below the highest navigable level" → "Navigation open again".
 - **Low water**: "Water level state changes", new state Low → a reminder to check the moorings.
 
 ## Data sources, licence and quotas
@@ -146,8 +144,7 @@ than a day.
 
 ## Limits
 
-- Developed without the hardware: feedback welcome. Tested against recorded answers of the real
-  service; no live test in a Gladys installation yet.
+- No hardware needed; tested against the live service and against recorded answers, but not yet in a real Gladys installation: feedback welcome.
 - Federal waterways only: no gauge of the Länder services (for instance the Bavarian or
   Baden-Württemberg flood centres).
 - No forecasts: PEGELONLINE publishes measurements only.

@@ -34,7 +34,7 @@ kein Schlüssel.
 - Internetzugang von Gladys aus: Die Integration liest `www.pegelonline.wsv.de`.
 - Für „Rund um mein Haus“: der Standort deines Hauses in Gladys (Einstellungen, Häuser). Die
   Integration fragt bei der Installation danach (Berechtigung „Standort“). Er wird nur im
-  Container genutzt, um die nächsten Pegel zu finden: nie an PEGELONLINE gesendet, nie
+  Container genutzt, um die nächsten Pegel zu finden: nie an PEGELONLINE gesendet (das nur sieht, welche nahen Pegel abgefragt werden), nie
   gespeichert und nie protokolliert.
 - Nur Deutschland: PEGELONLINE deckt die Bundeswasserstraßen ab, nicht die kleineren Gewässer
   der Länder.
@@ -114,8 +114,7 @@ Füge das Widget **PEGELONLINE** zu einem Dashboard hinzu.
 Die angebotenen Werte: NNW (niedrigster bekannter), MNW (mittlerer Niedrigwasserstand), MW
 (Mittelwasser), MHW (mittlerer Hochwasserstand), Hochwassermarken I und II (Rhein: Schifffahrt
 eingeschränkt, dann eingestellt) und HHW (höchster bekannter). Ein Pegel löst nur die Werte aus,
-die er hat. Der Wasserstand muss 2 cm unter einen Wert zurückfallen, bevor ein neuer Anstieg
-zählt: Ein Wasserstand, der um einen Wert pendelt, löst nur einmal aus. Die Lagen kommen von
+die er hat. Das Fallen zählt, sobald der Wasserstand 2 cm unter dem Wert liegt, und erst danach kann ein neuer Anstieg zählen: Ein Wasserstand, der um einen Wert pendelt, löst nur einmal aus. Die Lagen kommen von
 PEGELONLINE selbst.
 
 Die Auslöser feuern nur für ein angelegtes Gerät, bei einer frischen Messung und nicht nach
@@ -129,7 +128,7 @@ einem Neustart von mehr als einem Tag.
 - **Kellerwache**: „Wasserstandslage ändert sich“, dein Pegel, neue Lage Hoch → die
   Steckdose der Pumpe einschalten und die Familie benachrichtigen.
 - **Bootsausflug**: „Höchster Schifffahrtswasserstand überschritten“, Station Kaub →
-  Nachricht „Keine Schifffahrt auf dem {{river}}“; „Wieder unter dem höchsten
+  Nachricht „Keine Schifffahrt: {{river}}“; „Wieder unter dem höchsten
   Schifffahrtswasserstand“ → „Schifffahrt wieder frei“.
 - **Niedrigwasser**: „Wasserstandslage ändert sich“, neue Lage Niedrig → eine Erinnerung, die
   Festmacher zu prüfen.
@@ -162,8 +161,7 @@ einem Neustart von mehr als einem Tag.
 
 ## Grenzen
 
-- Ohne die Hardware entwickelt: Rückmeldungen willkommen. Getestet mit aufgezeichneten
-  Antworten des echten Dienstes; noch kein Live-Test in einer Gladys-Installation.
+- Keine Hardware nötig; getestet mit dem echten Dienst und mit aufgezeichneten Antworten, aber noch nicht in einer echten Gladys-Installation: Rückmeldungen willkommen.
 - Nur Bundeswasserstraßen: keine Pegel der Landesdienste (zum Beispiel des Hochwassernachrichtendienstes
   Bayern oder der Hochwasservorhersagezentrale Baden-Württemberg).
 - Keine Vorhersagen: PEGELONLINE veröffentlicht nur Messwerte.

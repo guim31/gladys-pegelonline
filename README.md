@@ -28,7 +28,7 @@ Promised to ruegerth on the Gladys forum, as the German counterpart of
   ("Rhein", "Mosel Trier") or by number, with the river kilometre, distance and current level.
 - **Scene triggers**: _Water level state changes_ (low, normal, high), _Characteristic water
   level crossed_ (NNW, MNW, MW, MHW, high water marks I and II, HHW; rising or falling, with a
-  2 cm hysteresis), _Above the highest navigable level_ and _Back below_ it. A threshold of your
+  2 cm hysteresis on the fall), _Above the highest navigable level_ and _Back below_ it. A threshold of your
   own stays a Gladys device condition on the water level.
 - **Dashboard widget**: the followed gauges with their level, trend and state, or the detail of
   one gauge with live tiles.
@@ -79,8 +79,7 @@ Gladys core ── devices, states, scene events, widget
 ## Limitations
 
 - **Not a flood warning service.** No guarantee of delay or availability.
-- **Developed without the hardware: feedback welcome.** Tested against a real recorded answer of
-  PEGELONLINE (23/10/2026), not on a live Gladys.
+- **Not yet tested in a real Gladys installation: feedback welcome.** No hardware involved; tested against the live service and a recorded answer of PEGELONLINE (23/10/2026).
 - Water levels are gauge readings above each gauge zero: not comparable between gauges, not
   depths.
 - Federal waterways only (no gauges of the Länder services), no forecasts.

@@ -268,3 +268,8 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
   librement reste une condition de scène native sur la hauteur (fonctionnalité numérique).
 - Le 23/10/2026, le Rhin à Köln (64 cm) était **sous son NNW** (69 cm) : les tests en tiennent
   compte.
+- Relecture du 23/10 : `schedule()` avant le premier cycle (un `publishDiscoveredDevices` en échec
+  au démarrage laissait l'intégration sans minuteur) ; une config enregistrée pendant un cycle
+  relance un cycle juste après (`runCycle({ again: true })`) ; `onDeviceUpdated` republie les
+  états (le SDK les oublie au « Mettre à jour ») ; les stations plus suivies sont purgées de
+  `/data`.

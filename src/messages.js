@@ -77,6 +77,8 @@ export const STATUS = {
     initFailed: 'Initialization failed, check the integration logs.',
     down: 'PEGELONLINE does not answer: the readings will come back with it.',
     unknown: ({ names }) => `Unknown station: ${names}. Use "Find stations".`,
+    homeFailed:
+      'Around my house: the nearest stations cannot be chosen yet, tried again at the next refresh.',
     noHouse: 'Around my house: give your house a location in Gladys (Settings, Houses).',
     tooMany: ({ max }) => `Only the first ${max} stations are followed.`,
     none: 'No station yet: fill in the configuration, or use "Find stations".',
@@ -85,6 +87,8 @@ export const STATUS = {
     initFailed: "L'initialisation a échoué, consultez les logs de l'intégration.",
     down: 'PEGELONLINE ne répond pas : les mesures reviendront avec lui.',
     unknown: ({ names }) => `Station inconnue : ${names}. Utilisez « Chercher des stations ».`,
+    homeFailed:
+      'Autour de ma maison : les stations les plus proches ne peuvent pas encore être choisies, nouvel essai à la prochaine mise à jour.',
     noHouse:
       'Autour de ma maison : indiquez la position de votre maison dans Gladys (Paramètres, Maisons).',
     tooMany: ({ max }) => `Seules les ${max} premières stations sont suivies.`,
@@ -94,6 +98,8 @@ export const STATUS = {
     initFailed: 'Initialisierung fehlgeschlagen, sieh dir die Protokolle der Integration an.',
     down: 'PEGELONLINE antwortet nicht: Die Messwerte kommen mit ihm zurück.',
     unknown: ({ names }) => `Unbekannte Station: ${names}. Nutze „Stationen suchen“.`,
+    homeFailed:
+      'Rund um mein Haus: Die nächsten Stationen können noch nicht gewählt werden, neuer Versuch bei der nächsten Aktualisierung.',
     noHouse: 'Rund um mein Haus: Gib deinem Haus in Gladys einen Standort (Einstellungen, Häuser).',
     tooMany: ({ max }) => `Nur die ersten ${max} Stationen werden verfolgt.`,
     none: 'Noch keine Station: Fülle die Konfiguration aus oder nutze „Stationen suchen“.',
@@ -102,6 +108,8 @@ export const STATUS = {
     initFailed: 'La inicialización ha fallado, consulte los registros de la integración.',
     down: 'PEGELONLINE no responde: las mediciones volverán con él.',
     unknown: ({ names }) => `Estación desconocida: ${names}. Use «Buscar estaciones».`,
+    homeFailed:
+      'Alrededor de mi casa: aún no se pueden elegir las estaciones más cercanas, nuevo intento en la próxima actualización.',
     noHouse: 'Alrededor de mi casa: indique la ubicación de su casa en Gladys (Ajustes, Casas).',
     tooMany: ({ max }) => `Solo se siguen las ${max} primeras estaciones.`,
     none: 'Aún no hay estaciones: rellene la configuración o use «Buscar estaciones».',

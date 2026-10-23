@@ -67,6 +67,8 @@ export function registerHandlers(gladys, options = {}) {
   gladys.onPoll(whenReady((device) => monitor.poll(device)));
 
   gladys.onDeviceCreated(whenReady((device) => monitor.onDeviceCreated(device)));
+  // "Update" in Discovery: the SDK forgets the states of the device, publish them again.
+  gladys.onDeviceUpdated(whenReady((device) => monitor.onDeviceCreated(device)));
   gladys.onDeviceDeleted(whenReady((device) => monitor.onDeviceDeleted(device)));
 
   gladys.onConfigUpdated(whenReady((newConfig) => monitor.reconfigure(normalizeConfig(newConfig))));

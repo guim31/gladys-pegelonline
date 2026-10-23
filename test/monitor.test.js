@@ -192,7 +192,8 @@ test('state, navigation and mark triggers: one event per transition', async (t) 
   await cycle(world, 15);
   world.api.setLevel(KOELN, now(), mw + 1, { state: 'normal' });
   await cycle(world, 15);
-  world.api.setLevel(KOELN, now(), mw - 5, { state: 'normal' });
+  // 2 cm below the mark: the fall counts.
+  world.api.setLevel(KOELN, now(), mw - 2, { state: 'normal' });
   await cycle(world, 15);
   const events = world.fake.sceneEvents.map((event) => [
     event.key,
@@ -222,7 +223,7 @@ test('state, navigation and mark triggers: one event per transition', async (t) 
   assert.equal(world.fake.sceneEvents[3].data.mark_value, mw);
 
   let seen = world.fake.sceneEvents.length;
-  const hsw = 1000;
+  const hsw = world.api.mark(KOELN, 'HSW');
   world.api.setLevel(KOELN, now(), hsw + 5, { state: 'high', navigation: 'high' });
   await cycle(world, 15);
   const flood = world.fake.sceneEvents.slice(seen);
@@ -235,7 +236,7 @@ test('state, navigation and mark triggers: one event per transition', async (t) 
       .filter((event) => event.key === 'mark_crossed')
       .map((event) => event.data.mark)
       .sort(),
-    ['M_I', 'M_II', 'MHW', 'MW'].filter((m) => world.api.mark(KOELN, m) <= hsw + 5).sort(),
+    ['M_I', 'M_II', 'MHW', 'MW'].sort(),
   );
   seen = world.fake.sceneEvents.length;
   world.api.setLevel(KOELN, now(), hsw - 300, { state: 'normal', navigation: 'normal' });
@@ -395,4 +396,84 @@ test('onPoll, should a Gladys call it: reads again only when the cycle is old', 
   world.clock.advance(10 * MINUTE);
   await world.fake.poll(devices[0]);
   assert.equal(world.api.requests.length, requests + 1);
+});
+
+test('a change remembered before the device creation fires; a device update republishes', async (t) => {
+  const world = await createWorld({ config: { stations: '' } });
+  t.after(() => world.app.stop());
+  await world.fake.configUpdated({ stations: KOELN });
+  await world.monitor.running;
+  const device = await create(world, KOELN);
+  world.api.setLevel(KOELN, world.clock.now(), 900, { state: 'high', navigation: 'high' });
+  await cycle(world, 15);
+  assert.ok(world.fake.sceneEvents.length > 0, 'the change from the first reading fires');
+  const before = world.fake.states.length;
+  world.gladys.forgetPublishedStates?.();
+  await world.fake.deviceUpdated(device);
+  assert.ok(world.fake.states.length > before, 'states published again after "Update"');
+});
+
+test('a configuration saved during a cycle is applied right after it', async (t) => {
+  const world = await createWorld({ config: { stations: KOELN } });
+  t.after(() => world.app.stop());
+  const running = world.monitor.runCycle();
+  const saved = world.fake.configUpdated({ stations: `${KOELN}, ${PASSAU}` });
+  await running;
+  await saved;
+  await world.monitor.rerun;
+  assert.deepEqual(world.monitor.followed(), [KOELN, PASSAU]);
+  assert.ok(discovered(world, PASSAU));
+});
+
+test('a failed start keeps the internal timer, and a reconnection does not stack it', async (t) => {
+  const timers = t.mock.timers;
+  timers.enable({ apis: ['setInterval', 'setTimeout'] });
+  const gladysFail = { fail: true };
+  const world = await createWorld({ config: { stations: KOELN }, timers: true, connect: false });
+  t.after(() => world.app.stop());
+  const publish = world.gladys.publishDiscoveredDevices.bind(world.gladys);
+  t.mock.method(world.gladys, 'publishDiscoveredDevices', async (devices) => {
+    if (gladysFail.fail) {
+      throw new Error('HTTP 503');
+    }
+    return publish(devices);
+  });
+  await world.gladys.connect();
+  await world.app.ready;
+  assert.ok(world.monitor.cycleTimer, 'scheduled despite the failure');
+  gladysFail.fail = false;
+  const requests = world.api.requests.length;
+  world.clock.advance(15 * MINUTE);
+  timers.tick(15 * MINUTE);
+  await world.monitor.running;
+  assert.equal(world.api.requests.length, requests + 1);
+});
+
+test('the stations no longer followed are forgotten in /data', async (t) => {
+  const world = await createWorld({ config: { stations: `${KOELN}, ${PASSAU}` } });
+  t.after(() => world.app.stop());
+  assert.ok(world.monitor.data.readings[PASSAU]);
+  await world.fake.configUpdated({ stations: KOELN });
+  await world.monitor.running;
+  assert.equal(world.monitor.data.readings[PASSAU], undefined);
+  assert.equal(world.monitor.data.stations[PASSAU], undefined);
+  assert.ok(world.monitor.data.readings[KOELN]);
+});
+
+test('the houses of Gladys unreadable: no "give your house a location", tried again', async (t) => {
+  const world = await createWorld({ config: { around_home: '20' }, connect: false });
+  t.after(() => world.app.stop());
+  const houses = t.mock.method(world.gladys, 'getHouses', async () => {
+    throw new Error('HTTP 500');
+  });
+  await world.gladys.connect();
+  await world.app.ready;
+  await world.monitor.running;
+  const status = world.fake.connectionStatus;
+  assert.doesNotMatch(status.message.en, /give your house a location/);
+  assert.match(status.message.en, /cannot be chosen yet/);
+  houses.mock.restore();
+  await cycle(world, 15);
+  assert.deepEqual(world.monitor.followed(), [KOELN]);
+  assert.equal(world.fake.connectionStatus.connected, true);
 });

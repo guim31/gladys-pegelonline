@@ -126,6 +126,7 @@ export class Monitor {
     this.running = null;
     this.lastRefreshAt = -Infinity;
     this.refreshTimer = null;
+    this.rerun = null;
     this.stopped = false;
     // Keys of the failures already logged, so a repeated one is not logged again.
     this.failing = new Set();
@@ -157,17 +158,21 @@ export class Monitor {
     if (saved?.version === 1) {
       this.data = { ...emptyData(), ...saved };
     }
+    // Scheduled first: a failure below must not leave the integration without cycles.
+    this.schedule();
     await this.runCycle();
     await this.publishDiscovered();
     logger.info(
       `Started: ${this.followed().length} station(s) followed, refreshed every ${config.refreshMinutes} min`,
     );
-    this.schedule();
   }
 
   /** Reconnection: Gladys may have restarted, publish everything again. */
   async resync(config) {
     this.config = config;
+    if (!this.cycleTimer) {
+      this.schedule();
+    }
     await this.publishDiscovered();
     this.statusMessage = undefined;
     await this.updateConnectionStatus();
@@ -181,7 +186,8 @@ export class Monitor {
     this.config = config;
     this.data.home = null;
     this.resolved = false;
-    await this.runCycle();
+    // A cycle already running reads the old configuration: run another one after it.
+    await this.runCycle({ again: true });
     await this.publishDiscovered();
     const after = this.followed();
     if (after.join(',') !== before) {
@@ -343,9 +349,14 @@ export class Monitor {
         } else {
           home.forEach(add);
         }
+        this.recovered('home', 'Stations around the house chosen again');
       } catch (err) {
         complete = false;
-        logger.debug(`Cannot choose the stations around the house yet: ${err.message}`);
+        this.failed(
+          'home',
+          'warn',
+          `Cannot choose the stations around the house yet: ${err.message}`,
+        );
       }
     }
     if (uuids.length > MAX_STATIONS) {
@@ -363,8 +374,12 @@ export class Monitor {
     }
   }
 
-  /** The first house of Gladys that has a location, or null. */
-  async house() {
+  /**
+   * The first house of Gladys that has a location, or null. A failure to read
+   * the houses throws with `strict` (the stations are chosen again later), and
+   * resolves null otherwise (the search then asks for a location).
+   */
+  async house({ strict = false } = {}) {
     try {
       const houses = await this.gladys.getHouses();
       return (
@@ -373,6 +388,9 @@ export class Monitor {
         ) ?? null
       );
     } catch (err) {
+      if (strict) {
+        throw new Error(`cannot read the houses of Gladys: ${err.message}`);
+      }
       this.failed('houses', 'warn', `Cannot read the houses of Gladys: ${err.message}`);
       return null;
     }
@@ -405,7 +423,7 @@ export class Monitor {
     ) {
       return cached.uuids;
     }
-    const house = await this.house();
+    const house = await this.house({ strict: true });
     if (!house) {
       return null;
     }
@@ -444,8 +462,12 @@ export class Monitor {
   async updateConnectionStatus() {
     const { unknown, noHouse, tooMany } = this.problems;
     const parts = [];
-    if (this.failing.has('readings') || this.failing.has('referential')) {
+    // A failed weekly download of the list is harmless while the old list serves.
+    if (this.failing.has('readings') || (this.failing.has('referential') && !this.referential)) {
       parts.push(render(STATUS, 'down'));
+    }
+    if (this.failing.has('home')) {
+      parts.push(render(STATUS, 'homeFailed'));
     }
     if (unknown.length > 0) {
       parts.push(render(STATUS, 'unknown', { names: unknown.join(', ') }));
@@ -477,7 +499,7 @@ export class Monitor {
       return;
     }
     if (!this.data.readings[uuid]) {
-      await this.runCycle();
+      await this.runCycle({ again: true });
     }
     // The SDK forgot the states of the device: everything is published again.
     await this.publishStates([uuid]);
@@ -506,8 +528,19 @@ export class Monitor {
 
   // --- Cycles ------------------------------------------------------------------
 
-  runCycle() {
-    if (this.running || this.stopped) {
+  /** Run a cycle; `again`: if one is running, run a new one once it is over. */
+  runCycle({ again = false } = {}) {
+    if (this.stopped) {
+      return this.running;
+    }
+    if (this.running) {
+      if (again) {
+        this.rerun ??= this.running.then(() => {
+          this.rerun = null;
+          return this.runCycle();
+        });
+        return this.rerun;
+      }
       return this.running;
     }
     this.running = this.cycle()
@@ -526,6 +559,7 @@ export class Monitor {
     await this.resolve();
     const uuids = this.followed();
     const changed = await this.refreshReadings(uuids);
+    this.forget(uuids);
     if (this.discoveredKey() !== before) {
       await this.publishDiscovered();
     }
@@ -540,6 +574,17 @@ export class Monitor {
 
   discoveredKey() {
     return JSON.stringify(this.discoveredDevices());
+  }
+
+  /** Drop what is kept of the stations no longer followed (the house ones change). */
+  forget(followed) {
+    for (const table of [this.data.stations, this.data.readings, this.data.memory]) {
+      for (const uuid of Object.keys(table)) {
+        if (!followed.includes(uuid)) {
+          delete table[uuid];
+        }
+      }
+    }
   }
 
   readingOf(uuid) {
@@ -698,7 +743,7 @@ export class Monitor {
       } else if (previous.side === 'below' && current.v >= value) {
         side = 'above';
         events.push([TRIGGERS.MARK_CROSSED, { mark, value, direction: 'rising' }]);
-      } else if (previous.side === 'above' && current.v < value - hysteresis) {
+      } else if (previous.side === 'above' && current.v <= value - hysteresis) {
         side = 'below';
         events.push([TRIGGERS.MARK_CROSSED, { mark, value, direction: 'falling' }]);
       } else {

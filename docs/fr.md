@@ -33,7 +33,7 @@ Schifffahrtsverwaltung des Bundes (WSV). Sans compte, sans clé.
 - Un accès à Internet depuis Gladys : l'intégration lit `www.pegelonline.wsv.de`.
 - Pour « Autour de ma maison » : la position de votre maison dans Gladys (Paramètres, Maisons).
   L'intégration la demande à l'installation (permission « localisation »). Elle ne sert que
-  dans le conteneur, à trouver les stations les plus proches : jamais envoyée à PEGELONLINE,
+  dans le conteneur, à trouver les stations les plus proches : jamais envoyée à PEGELONLINE (qui voit seulement quelles stations voisines sont demandées),
   jamais enregistrée ni écrite dans les logs.
 - Allemagne seulement : PEGELONLINE couvre les voies navigables fédérales, pas les petits cours
   d'eau suivis par les Länder.
@@ -113,8 +113,7 @@ Ajoutez le widget **PEGELONLINE** à un tableau de bord.
 Les niveaux proposés : NNW (plus basses eaux connues), MNW (basses eaux moyennes), MW (niveau
 moyen), MHW (hautes eaux moyennes), cotes de crue I et II (Rhin : navigation restreinte, puis
 arrêtée) et HHW (plus hautes eaux connues). Une station ne déclenche que les niveaux qu'elle a.
-La hauteur doit redescendre de 2 cm sous un niveau avant qu'une nouvelle montée compte : une
-hauteur qui oscille autour d'un niveau ne déclenche qu'une fois. Les états viennent de
+La descente compte quand la hauteur est 2 cm sous le niveau, et seulement alors une nouvelle montée peut compter : une hauteur qui oscille autour d'un niveau ne déclenche qu'une fois. Les états viennent de
 PEGELONLINE lui-même.
 
 Les déclencheurs ne partent que pour un appareil créé, sur une mesure fraîche, et pas après un
@@ -128,7 +127,7 @@ redémarrage de plus d'un jour.
 - **Surveillance de la cave** : « L'état du niveau d'eau change », votre station, nouvel état
   Élevé → allumer la prise de la pompe et prévenir la famille.
 - **Sortie en bateau** : « Au-dessus de la hauteur maximale de navigation », station Kaub →
-  message « Navigation arrêtée sur le {{river}} » ; « Repasse sous la hauteur maximale de
+  message « Navigation arrêtée : {{river}} » ; « Repasse sous la hauteur maximale de
   navigation » → « Navigation rouverte ».
 - **Basses eaux** : « L'état du niveau d'eau change », nouvel état Faible → un rappel pour
   vérifier les amarres.
@@ -162,8 +161,7 @@ redémarrage de plus d'un jour.
 
 ## Limites
 
-- Développée sans le matériel : vos retours sont les bienvenus. Testée sur des réponses
-  enregistrées du vrai service ; pas encore de test en direct dans une installation Gladys.
+- Aucun matériel nécessaire ; testée sur le vrai service et sur des réponses enregistrées, mais pas encore dans une vraie installation Gladys : vos retours sont les bienvenus.
 - Voies navigables fédérales seulement : aucune station des services des Länder (par exemple
   les centres de prévision des crues de Bavière ou du Bade-Wurtemberg).
 - Pas de prévisions : PEGELONLINE ne publie que des mesures.

@@ -33,7 +33,7 @@ Schifffahrtsverwaltung des Bundes (WSV). Sin cuenta, sin clave.
 - Acceso a Internet desde Gladys: la integración lee `www.pegelonline.wsv.de`.
 - Para «Alrededor de mi casa»: la ubicación de su casa en Gladys (Ajustes, Casas). La
   integración la solicita en la instalación (permiso «ubicación»). Solo se usa dentro del
-  contenedor para encontrar las estaciones más cercanas: nunca se envía a PEGELONLINE, nunca se
+  contenedor para encontrar las estaciones más cercanas: nunca se envía a PEGELONLINE (que solo ve qué estaciones cercanas se consultan), nunca se
   guarda ni se escribe en los registros.
 - Solo Alemania: PEGELONLINE cubre las vías navegables federales, no los ríos menores de los
   Länder.
@@ -110,9 +110,7 @@ Añada el widget **PEGELONLINE** a un panel.
 
 Los niveles ofrecidos: NNW (mínimo histórico), MNW (nivel bajo medio), MW (nivel medio), MHW
 (nivel alto medio), marcas de crecida I y II (Rin: navegación restringida y después detenida) y
-HHW (máximo histórico). Una estación solo dispara los niveles que tiene. El nivel debe volver a
-bajar 2 cm por debajo de un nivel antes de que cuente una nueva subida: un nivel que oscila
-alrededor de un nivel de referencia dispara una sola vez. Los estados proceden del propio
+HHW (máximo histórico). Una estación solo dispara los niveles que tiene. La bajada cuenta cuando el nivel está 2 cm por debajo del nivel de referencia, y solo entonces puede contar una nueva subida: un nivel que oscila alrededor de un nivel de referencia dispara una sola vez. Los estados proceden del propio
 PEGELONLINE.
 
 Los disparadores solo actúan para un dispositivo creado, con una medición reciente, y no
@@ -126,7 +124,7 @@ después de un reinicio de más de un día.
 - **Vigilancia del sótano**: «El estado del nivel cambia», su estación, nuevo estado Alto →
   encender el enchufe de la bomba y avisar a la familia.
 - **Salida en barco**: «Por encima del nivel máximo de navegación», estación Kaub → mensaje
-  «Navegación detenida en el {{river}}»; «Vuelve bajo el nivel máximo de navegación» →
+  «Navegación detenida: {{river}}»; «Vuelve bajo el nivel máximo de navegación» →
   «Navegación abierta de nuevo».
 - **Aguas bajas**: «El estado del nivel cambia», nuevo estado Bajo → un recordatorio para
   revisar las amarras.
@@ -158,8 +156,7 @@ después de un reinicio de más de un día.
 
 ## Límites
 
-- Desarrollada sin el hardware: sus comentarios son bienvenidos. Probada con respuestas
-  grabadas del servicio real; aún sin prueba en directo en una instalación de Gladys.
+- No necesita hardware; probada con el servicio real y con respuestas grabadas, pero aún no en una instalación real de Gladys: sus comentarios son bienvenidos.
 - Solo vías navegables federales: ninguna estación de los servicios de los Länder (por ejemplo,
   los centros de previsión de crecidas de Baviera o de Baden-Wurtemberg).
 - Sin previsiones: PEGELONLINE solo publica mediciones.
