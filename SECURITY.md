@@ -30,6 +30,17 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- **Stored in `/data`** (`/data/pegelonline.json`): what it learnt about the followed gauges
+  (name, number, river, coordinates of the gauge, series and characteristic values), the last
+  readings and the last states. No secret, no account, no token: the service needs none. The
+  **house coordinates** are read from Gladys (manifest `location: true`) only to find the nearest
+  gauges inside the container; they are never sent, stored nor logged.
+- **Network**: HTTPS GET requests to one public open-data service only,
+  `www.pegelonline.wsv.de` (station list, and the current measurements of the followed gauges by
+  their uuid). Nothing listens on the network.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the PEGELONLINE service.
