@@ -12,44 +12,21 @@ the notes of the version's GitHub Release.
 
 ### Added
 
-- A working example of scene triggers, scene actions and dashboard widgets
-  (Gladys 5.1.0 or later).
-- `CHANGELOG.md`, rolled by the Release workflow.
-- A GitHub Release for every version, with its changelog section as notes: the
-  Gladys Supervision page links each version to the repository's releases.
-- CI runs the tests on Node 22 and 24, and builds the Docker image.
-- Dependabot keeps the npm dependencies and the GitHub Actions up to date.
-- `SECURITY.md` (how to report a vulnerability) and `CLAUDE.md` (project rules
-  for contributors and coding assistants).
-- Manifest tests: `version` matches `package.json`, `docker_image` is tagged
-  with it, descriptions hold 10 to 100 characters, placeholders are
-  multi-language objects.
-- The latitude and longitude fields show an example value as placeholder.
-
-### Changed
-
-- Node.js 22 or later is required (Node 20 is end-of-life).
-- Integration SDK 0.15.0. The tests now run against the fake Gladys of the
-  SDK, which refuses the payloads Gladys refuses.
-- The refresh interval is one minute minimum, the fastest Gladys polls a
-  device. The plug's power is only sent when it changes, and every 30
-  minutes otherwise.
-
-### Fixed
-
-- Gladys refused the devices of the Discovery tab: the weather station and
-  the plug declared their poll frequency in seconds instead of one of the
-  values Gladys accepts, and were never polled. They now poll every minute,
-  and the readings follow the refresh interval of the configuration.
-
-- The release commit no longer fails `npm run format:check`: the Release
-  workflow updates the manifest `version` and `docker_image` in place instead
-  of re-printing the whole file with `jq`.
-- The integration can write to `/data`: the image creates the directory owned
-  by the `node` user, a new Docker volume was owned by root.
-- A sub-container running the integration's own image follows it to the new
-  tag at each release, as well as in the manifest of the build summary: it kept
-  the previous tag, which may not exist on the registry. Sub-containers on a
-  third-party image (a broker, a database...) keep theirs.
-
-[Unreleased]: https://github.com/GladysAssistant/integration-template-js/commits/main
+- One Gladys device per PEGELONLINE gauge of the German federal waterways: water level (cm, or m
+  for the gauges given above a datum), flow (m³/s), water and air temperatures when measured,
+  state of the level (low, normal, high against MNW and MHW), navigation level (against the
+  highest navigable water level HSW) and the date of the last reading. A gauge without a new
+  reading for 6 hours says "No new reading since…" instead of showing an old value as fresh.
+- Stations chosen by number, name (umlauts and case ignored) or page address, or the 3 nearest
+  gauges that send readings around the house (10, 20 or 50 km), chosen without sending the house
+  location anywhere.
+- "Find stations" in the Configuration screen: around the house, by name, by river or by number,
+  with the river kilometre, distance and current level.
+- Scene triggers "Water level state changes", "Characteristic water level crossed" (NNW, MNW, MW,
+  MHW, high water marks I and II, HHW; rising or falling), "Above the highest navigable level"
+  and "Back below the highest navigable level".
+- Dashboard widget "PEGELONLINE": followed gauges with level, trend and state, or the detail of
+  one gauge.
+- Refresh every 15, 20 or 30 minutes by the integration itself, with one request for all the
+  gauges, without relying on Gladys polling.
+- Texts and documentation in English, French, German and Spanish.

@@ -31,16 +31,19 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only (handlers registered in src/app.js)
+src/app.js                        registers every SDK handler on the monitor, action and widget
+src/monitor.js                    followed gauges, refresh cycles, states, scene triggers
+src/pegelonline.js                PEGELONLINE REST v2 client and parsing (W, Q, WT, LT, marks)
+src/devices.js                    Gladys device of a gauge (features, names, external ids)
+src/search.js                     "Find stations" configuration action
+src/widgets.js                    dashboard widget `stations`
+src/messages.js                   texts sent from the container, four languages
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+src/http.js, geo.js, store.js     GET JSON, distances, /data persistence
+gladys-assistant-integration.json manifest: config_schema, action, scene triggers, widget
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (same sections)
+test/                             node --test, against the SDK's fake Gladys and a recorded answer
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +73,10 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** is in four languages (English, French, German with
+  "du", Spanish with "usted"): action messages, manifest texts, widget texts,
+  feature names, and `docs/{en,fr,de,es}.md`, kept in sync
+  (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +238,33 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## PEGELONLINE (propre à cette intégration)
+
+- API REST v2 sans clé : `https://www.pegelonline.wsv.de/webservices/rest-api/v2/`. Licence des
+  données **DL-DE->Zero-2.0**. Une seule requête par cycle :
+  `stations.json?ids=<uuid>,…&includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true`
+  (un uuid inconnu est simplement absent de la réponse, pas d'erreur). `ids` accepte aussi les
+  numéros, mais l'intégration n'envoie que des uuids.
+- La liste des stations (`stations.json?includeTimeseries=true`, ~300 ko, 786 stations le
+  23/10/2026) n'est téléchargée que si la config a des noms, des numéros ou « Autour de ma
+  maison », et gardée une semaine **en mémoire** (pas dans `/data`, réécrit à chaque cycle). La
+  maison est cherchée localement : ses coordonnées ne partent jamais (le paramètre serveur
+  `latitude/longitude/radius` existe, il n'est volontairement pas utilisé).
+- `fuzzyId` du service ne replie pas les umlauts (`koln` ne trouve rien) : la recherche se fait
+  sur la liste, avec `normalizeName` (ö = oe = o, ß = ss).
+- **`W` n'est pas toujours en cm** : 67 stations en `m+NN`, 2 en `m+PNP` (lacs, retenues). Unité
+  de la fonctionnalité choisie à la création (cm ou m) ; les repères ne sont comparés que s'ils
+  ont l'unité de la série.
+- `stateMnwMhw` (`low`/`normal`/`high`/`unknown`/`commented`/`out-dated`) et `stateNswHsw` :
+  publiés en `level-sensor/liquid-state` (Gladys `LIQUID_STATE` 0/1/2, affiché
+  Faible/Normal/Élevé), seulement si la station a MNW+MHW (resp. HSW). Les autres valeurs ne sont
+  pas publiées.
+- Noms renvoyés tantôt en majuscules (`KÖLN`), tantôt en casse mixte (`Sankt Aldegund UP`) :
+  `titleCase` ne touche qu'aux noms tout en majuscules et garde `UP`/`OP`.
+- Certaines stations livrent leurs mesures par lots, avec plusieurs heures de retard (Elbe) :
+  seuil de mesure périmée à 6 h.
+- Déclencheur `mark_crossed` : hystérésis de 2 cm (0,02 m) à la descente. Un seuil choisi
+  librement reste une condition de scène native sur la hauteur (fonctionnalité numérique).
+- Le 23/10/2026, le Rhin à Köln (64 cm) était **sous son NNW** (69 cm) : les tests en tiennent
+  compte.

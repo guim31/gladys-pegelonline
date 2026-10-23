@@ -1,67 +1,172 @@
-# Template de démonstration
+# PEGELONLINE
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Apporte dans Gladys les **hauteurs d'eau des voies navigables fédérales allemandes** (Rhin,
+Elbe, Danube, Moselle, Main, Weser, Oder, les canaux et la côte : environ 800 stations), depuis
+**PEGELONLINE**, le service de données ouvertes de la Wasserstraßen- und
+Schifffahrtsverwaltung des Bundes (WSV). Sans compte, sans clé.
+
+> **Des valeurs brutes, pas un service d'alerte crues.** Les données peuvent être en retard,
+> manquantes ou fausses, et l'intégration dépend de votre Gladys, de votre accès à Internet et
+> d'un service public. En cas de crue, suivez les alertes officielles (service d'annonce des
+> crues du Land, votre commune, 112). Cette intégration est non affiliée à la WSV.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- **Un appareil par station suivie** : la **hauteur d'eau** (en cm, comme sur
+  pegelonline.wsv.de), le **débit** en m³/s, les **températures de l'eau et de l'air** quand la
+  station les mesure, l'**état** du niveau (faible, normal, élevé) et le **niveau de
+  navigation** (sous ou au-dessus de la hauteur maximale de navigation, HSW) quand la station a
+  ces références, et la date de la dernière mesure.
+- Une station qui n'envoie plus rien est signalée (« Pas de nouvelle mesure depuis… ») : une
+  ancienne valeur n'est jamais renvoyée comme si elle était fraîche.
+- Quatre **déclencheurs de scène** : l'état change (faible, normal, élevé), un niveau de
+  référence est franchi (niveau moyen, hautes eaux moyennes, cotes de crue I et II du Rhin…),
+  la hauteur dépasse la hauteur maximale de navigation, puis repasse en dessous.
+- Un **widget de tableau de bord** : vos stations, leur hauteur, sa tendance (monte, stable,
+  baisse) et leur état.
+- Un bouton **« Chercher des stations »** qui liste les stations autour de votre maison, par
+  nom, par cours d'eau ou par numéro, avec leur hauteur actuelle.
+
+## Prérequis
+
+- Gladys Assistant **5.1.0** ou plus récent.
+- Un accès à Internet depuis Gladys : l'intégration lit `www.pegelonline.wsv.de`.
+- Pour « Autour de ma maison » : la position de votre maison dans Gladys (Paramètres, Maisons).
+  L'intégration la demande à l'installation (permission « localisation »). Elle ne sert que
+  dans le conteneur, à trouver les stations les plus proches : jamais envoyée à PEGELONLINE,
+  jamais enregistrée ni écrite dans les logs.
+- Allemagne seulement : PEGELONLINE couvre les voies navigables fédérales, pas les petits cours
+  d'eau suivis par les Länder.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+### Réglages
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+| Réglage                            | Effet                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Stations                           | Numéros ou noms de stations, séparés par des virgules : `2730010, Kaub, Passau Donau`. L'adresse de la page d'une station marche aussi.    |
+| Autour de ma maison                | Suit aussi les 3 stations les plus proches qui envoient des mesures, à 10, 20 ou 50 km de votre maison.                                    |
+| Fréquence de mise à jour           | 15, 20 ou 30 minutes. Une seule requête couvre toutes les stations.                                                                        |
+| Langue des noms de fonctionnalités | Noms des fonctionnalités des nouveaux appareils (Hauteur d'eau, Débit…), et langue du texte « Dernière mesure » et des variables de scène. |
 
-## Actions
+Enregistrez, puis ouvrez l'onglet **Découverte** de l'intégration et créez les appareils
+voulus. Une station suivie le reste tant que son appareil existe, même retirée de la
+configuration.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+### Trouver vos stations
 
-## Scènes
+Cliquez sur **« Chercher des stations »** dans la configuration. Laissez le champ vide pour
+lister les stations autour de votre maison (20 km, ou la distance choisie), ou tapez :
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+- un nom de station : `Köln`, `Koeln` ou `KÖLN` (casse, accents et trémas ignorés) ;
+- un cours d'eau : `Rhein`, `Mosel`, `Elbe` (les 10 plus proches, ou les 10 premières dans
+  l'ordre du cours d'eau) ;
+- les deux : `Rhein Bonn` ;
+- un numéro de station : `2730010`.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Chaque ligne donne le numéro, le nom, le cours d'eau et son point kilométrique, la distance à
+votre maison et la hauteur actuelle, ou « pas de mesure récente ». Copiez les numéros dans
+« Stations », puis enregistrez.
 
-## Tableau de bord
+## Appareils
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+| Fonctionnalité                 | Type dans Gladys           | Valeur                                                                                                             |
+| ------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Hauteur d'eau                  | Profondeur du liquide (cm) | Hauteur au-dessus du zéro de l'échelle, en cm ; en m pour les rares stations rapportées à une altitude.            |
+| Débit (m³/s)                   | Débit d'eau                | En m³/s (Gladys n'a pas d'unité m³/s : le nom le dit).                                                             |
+| Température de l'eau           | Température (°C)           | Quand la station la mesure.                                                                                        |
+| Température de l'air           | Température (°C)           | Quand la station la mesure.                                                                                        |
+| État du niveau d'eau (MNW/MHW) | État du niveau             | Faible sous les basses eaux moyennes (MNW), Élevé au-dessus des hautes eaux moyennes (MHW), Normal entre les deux. |
+| Niveau de navigation (HSW)     | État du niveau             | Élevé au-dessus de la hauteur maximale de navigation (HSW), Normal en dessous.                                     |
+| Dernière mesure                | Texte                      | Date de la dernière mesure, ou « Pas de nouvelle mesure depuis… ».                                                 |
+
+Une fonctionnalité n'existe que si la station la fournit. La **hauteur d'eau n'est pas une
+profondeur** : c'est la lecture de l'échelle, au-dessus de son propre zéro. Comparez-la aux
+niveaux de référence de la même station (visibles sur sa page PEGELONLINE), pas à une autre
+station. Les paramètres de l'appareil contiennent l'uuid de la station, son numéro, son cours
+d'eau et son point kilométrique.
+
+La hauteur, le débit et les températures sont des fonctionnalités numériques : les scènes de
+Gladys savent déjà les comparer à une valeur de votre choix (« Hauteur d'eau au-dessus de
+650 cm »).
+
+## Widget de tableau de bord
+
+Ajoutez le widget **PEGELONLINE** à un tableau de bord.
+
+- **Sans réglage** : une ligne par station suivie (10 au plus) avec sa hauteur et sa tendance,
+  colorée selon son état : bleu faible, vert normal, rouge élevé ou au-dessus du niveau de
+  navigation, gris sans état ou sans mesure récente. Un titre nomme les stations en hautes eaux.
+- **Avec une station choisie** : sa hauteur, son débit et la température de l'eau en direct,
+  puis son état, son niveau de navigation, sa tendance et sa dernière mesure, et un lien vers sa
+  page PEGELONLINE.
+
+## Déclencheurs de scène
+
+| Déclencheur                                    | Filtres                                                     | Variables                                                                                        |
+| ---------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| L'état du niveau d'eau change                  | Station, nouvel état (faible, normal, élevé)                | Nom de la station, cours d'eau, hauteur, unité, état, état précédent (code et en toutes lettres) |
+| Niveau de référence franchi                    | Station, niveau, sens (passe au-dessus, repasse en dessous) | Nom de la station, cours d'eau, hauteur, unité, code et nom du niveau, sa valeur, sens           |
+| Au-dessus de la hauteur maximale de navigation | Station                                                     | Nom de la station, cours d'eau, hauteur, unité, HSW                                              |
+| Repasse sous la hauteur maximale de navigation | Station                                                     | Nom de la station, cours d'eau, hauteur, unité, HSW                                              |
+
+Les niveaux proposés : NNW (plus basses eaux connues), MNW (basses eaux moyennes), MW (niveau
+moyen), MHW (hautes eaux moyennes), cotes de crue I et II (Rhin : navigation restreinte, puis
+arrêtée) et HHW (plus hautes eaux connues). Une station ne déclenche que les niveaux qu'elle a.
+La hauteur doit redescendre de 2 cm sous un niveau avant qu'une nouvelle montée compte : une
+hauteur qui oscille autour d'un niveau ne déclenche qu'une fois. Les états viennent de
+PEGELONLINE lui-même.
+
+Les déclencheurs ne partent que pour un appareil créé, sur une mesure fraîche, et pas après un
+redémarrage de plus d'un jour.
+
+## Exemples de scènes
+
+- **Crue du Rhin** : « Niveau de référence franchi », station Köln, niveau « Cote de crue I »,
+  passe au-dessus → envoyer un message : « {{station_name}} : {{height}} {{unit}}, au-dessus de
+  la {{mark_name}} ».
+- **Surveillance de la cave** : « L'état du niveau d'eau change », votre station, nouvel état
+  Élevé → allumer la prise de la pompe et prévenir la famille.
+- **Sortie en bateau** : « Au-dessus de la hauteur maximale de navigation », station Kaub →
+  message « Navigation arrêtée sur le {{river}} » ; « Repasse sous la hauteur maximale de
+  navigation » → « Navigation rouverte ».
+- **Basses eaux** : « L'état du niveau d'eau change », nouvel état Faible → un rappel pour
+  vérifier les amarres.
+
+## Sources, licence et quotas
+
+- Données : **PEGELONLINE**, Wasserstraßen- und Schifffahrtsverwaltung des Bundes (WSV),
+  licence **DL-DE->Zero-2.0** (usage libre, sans obligation de citer ; le widget cite quand
+  même la source).
+- Les valeurs sont des **données brutes**, publiées avant tout contrôle par la WSV : elles
+  peuvent être corrigées ensuite.
+- Sans compte, sans clé, sans quota documenté. L'intégration reste légère : **une requête par
+  mise à jour** pour toutes les stations suivies (15 minutes par défaut, le pas de mesure), et
+  la liste des stations (environ 300 ko) une fois par semaine, seulement si des noms, des
+  numéros ou « Autour de ma maison » en ont besoin.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Station inconnue »** : vérifiez l'orthographe ou utilisez « Chercher des stations »,
+  puis copiez le numéro.
+- **« PEGELONLINE ne répond pas »** : le service ou votre accès à Internet est coupé ; les
+  valeurs reviennent d'elles-mêmes.
+- **« Autour de ma maison » n'ajoute rien** : donnez une position à votre maison (Paramètres,
+  Maisons), ou choisissez une distance plus grande : les stations allemandes peuvent être
+  éloignées.
+- **Pas d'état ni de niveau de navigation** : la station n'a pas de référence MNW/MHW ou HSW
+  (lacs, retenues, beaucoup de stations à marée).
+- **« Pas de nouvelle mesure depuis… »** : la station envoie en retard ou plus du tout ;
+  certaines envoient leurs valeurs par lots, avec quelques heures de retard.
+- Logs : dans Gladys, les logs de l'intégration ; `LOG_LEVEL=debug` montre chaque cycle.
+
+## Limites
+
+- Développée sans le matériel : vos retours sont les bienvenus. Testée sur des réponses
+  enregistrées du vrai service ; pas encore de test en direct dans une installation Gladys.
+- Voies navigables fédérales seulement : aucune station des services des Länder (par exemple
+  les centres de prévision des crues de Bavière ou du Bade-Wurtemberg).
+- Pas de prévisions : PEGELONLINE ne publie que des mesures.
+- 20 stations au plus depuis la configuration (plus celles dont vous avez créé l'appareil).
+- Les noms des fonctionnalités sont figés à la création de l'appareil : changer la langue
+  ensuite ne change que les textes envoyés après.
