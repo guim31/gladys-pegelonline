@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-23
+
 ### Added
 
 - One Gladys device per PEGELONLINE gauge of the German federal waterways: water level (cm, or m
@@ -30,3 +32,6 @@ the notes of the version's GitHub Release.
 - Refresh every 15, 20 or 30 minutes by the integration itself, with one request for all the
   gauges, without relying on Gladys polling.
 - Texts and documentation in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-pegelonline/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-pegelonline/releases/tag/v1.0.0
