@@ -30,7 +30,7 @@ kein Schlüssel.
 
 ## Voraussetzungen
 
-- Gladys Assistant **5.1.0** oder neuer.
+- Gladys Assistant **5.3.0** oder neuer.
 - Internetzugang von Gladys aus: Die Integration liest `www.pegelonline.wsv.de`.
 - Für „Rund um mein Haus“: der Standort deines Hauses in Gladys (Einstellungen, Häuser). Die
   Integration fragt bei der Installation danach (Berechtigung „Standort“). Er wird nur im
