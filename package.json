@@ -1,6 +1,6 @@
 {
   "name": "gladys-pegelonline",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Gladys Assistant external integration: water levels of the German federal waterways (PEGELONLINE, WSV).",
   "type": "module",
